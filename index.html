@@ -1,1 +1,506 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Star of Ash — Card Creator (Queue + CSV Export)</title>
+<style>
+  :root{
+    --bg:#0b0b0c; --panel:#151517; --panel2:#1b1b1f; --text:#eeeae6; --muted:#aaa6a2;
+    --accent:#b8571b; --accent2:#8a1d1d; --ash:#2b2b30; --border:#2b2b30; --ok:#57d38a; --warn:#ffb84d; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:radial-gradient(1200px 800px at 80% 0%, rgba(200,60,40,.12), transparent 60%),linear-gradient(180deg,#0b0b0c,#0b0b0c);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+  a{color:var(--accent)}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  .row{display:grid;grid-template-columns:360px 1fr;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .header{display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .header h1{font-size:20px;margin:0}
+  .pad{padding:16px}
+  .muted{color:var(--muted);font-size:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  input, select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text);outline:none}
+  input[type="number"]{appearance:textfield}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  textarea{min-height:88px;resize:vertical}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  button{cursor:pointer;border:none;padding:10px 14px;border-radius:12px;background:var(--accent);color:white;font-weight:600}
+  button.sec{background:transparent;border:1px solid var(--border)}
+  button.good{background:var(--ok);color:#0b0b0c}
+  button.bad{background:var(--bad)}
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel2);font-size:12px}
+  .mechanic-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#22242a;border:1px solid #2d2f36;margin:4px 6px 0 0;font-size:12px}
+  .mechanic-pill b{color:#ffd8a8}
+  .stack{display:flex;flex-direction:column;gap:10px}
+  .search{display:flex;gap:8px}
+  .search input{flex:1}
+  .groupTitle{font-size:12px;color:#c3beb8;margin:8px 0 4px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #222}
+  th{font-size:12px;color:#c3beb8;text-align:left}
+  tbody tr:hover{background:#17181c}
+  .mini{font-size:11px;color:#c3beb8}
+  .pill{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;display:inline-block}
+  .right{float:right}
+  .hr{height:1px;background:#222;margin:10px 0}
+  .hint{font-size:12px;color:#c3beb8}
+
+  @media (max-width: 980px){
+    .row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>⭐ Star of Ash — Card Creator</h1>
+      <div class="muted">Focused tool for fast card entry → queue → CSV export</div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <!-- LEFT: Form -->
+      <div class="card pad">
+        <div class="stack">
+          <div class="grid2">
+            <div>
+              <label>Card ID <span class="muted">(auto or custom)</span></label>
+              <input id="cardId" placeholder="AUTO" />
+            </div>
+            <div>
+              <label>Type</label>
+              <select id="type">
+                <option>Unit</option>
+                <option>Relic</option>
+                <option>Banner</option>
+                <option>Spell</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label>Name</label>
+            <input id="name" placeholder="E.g., Ember Vanguard" />
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>Cost</label>
+              <input id="cost" type="number" min="0" value="0" />
+            </div>
+            <div>
+              <label>ATK</label>
+              <input id="atk" type="number" min="0" value="0" />
+            </div>
+            <div>
+              <label>HP</label>
+              <input id="hp" type="number" min="0" value="1" />
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>MOV</label>
+              <input id="mov" type="number" min="0" value="1" />
+            </div>
+            <div>
+              <label>Faction <span class="muted">(optional)</span></label>
+              <select id="faction">
+                <option value="">—</option>
+                <option>Flame</option>
+                <option>Blood</option>
+                <option>Ash</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>Rarity <span class="muted">(optional)</span></label>
+              <select id="rarity">
+                <option value="">—</option>
+                <option>Common</option>
+                <option>Uncommon</option>
+                <option>Rare</option>
+                <option>Elite</option>
+                <option>Gamechanger</option>
+              </select>
+            </div>
+            <div>
+              <label>Flavor Text <span class="muted">(optional)</span></label>
+              <input id="flavor" placeholder="\"Power always costs something.\"" />
+            </div>
+          </div>
+
+          <div>
+            <label>Selected Mechanics → Rules Text</label>
+            <div id="picked" class="muted"></div>
+            <textarea id="rulesText" placeholder="Rules text will be assembled here from selected mechanics. You can also edit it manually."></textarea>
+            <div class="hint">Keywords field is auto-filled with the mechanic names; you can edit it below.</div>
+          </div>
+
+          <div>
+            <label>Keywords</label>
+            <input id="keywords" placeholder="Comma or semicolon separated" />
+          </div>
+
+          <div class="btns">
+            <button id="addBtn">Add to Queue</button>
+            <button class="sec" id="resetBtn">Clear</button>
+          </div>
+
+          <div class="hint">CSV columns exported match your v7.1 sheet: <b>Card ID, Name, Faction, Type, Cost, ATK, HP, MOV, Rarity, Keywords, Rules Text, Flavor Text</b>.</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Mechanics + Queue -->
+      <div class="stack">
+        <div class="card pad">
+          <div class="header"><h2 style="margin:0;font-size:16px">Mechanics</h2>
+            <div class="tag">Filter:
+              <select id="filterType" style="background:transparent;border:none;color:var(--text)">
+                <option value="all">All</option>
+                <option value="Unit">Unit</option>
+                <option value="Relic">Relic</option>
+                <option value="Banner">Banner</option>
+              </select>
+              <select id="filterClass" style="background:transparent;border:none;color:var(--text)">
+                <option value="any">Any Class</option>
+                <option>Penalty</option>
+                <option>Hybrid</option>
+                <option>Support</option>
+                <option>Defensive</option>
+                <option>Mobility</option>
+                <option>Trait</option>
+                <option>State</option>
+                <option>Aura</option>
+              </select>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="search">
+              <input id="search" placeholder="Search mechanics by name or text…" />
+              <button class="sec" id="clearMech">Clear</button>
+            </div>
+            <div class="hr"></div>
+            <div id="mechList" class="stack"></div>
+          </div>
+        </div>
+
+        <div class="card pad">
+          <div class="header"><h2 style="margin:0;font-size:16px">Queue</h2>
+            <div class="btns">
+              <button class="good" id="exportCsv">Export CSV</button>
+              <button class="sec" id="clearQueue">Clear Queue</button>
+            </div>
+          </div>
+          <div class="pad">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Name</th><th>Type</th><th>Cost</th><th>ATK</th><th>HP</th><th>MOV</th><th class="right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="queueBody"></tbody>
+            </table>
+            <div class="mini" id="queueHint">No items yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// --------------------- Mechanics Catalog ---------------------
+// Each mechanic: { name, class: 'Penalty'|'Hybrid'|'Support'|'Defensive'|'Mobility'|'Trait'|'State'|'Aura', appliesTo:['Unit'|'Relic'|'Banner'], text }
+const MECHANICS = [
+  // Unit — Movement suite
+  {name:'Weighted', class:'Penalty', appliesTo:['Unit'], text:'For every space this Unit moves, it gets –1 ATK until end of turn.'},
+  {name:'Cumbersome', class:'Penalty', appliesTo:['Unit'], text:'If this Unit moves more than 1 space, it cannot attack this turn.'},
+  {name:'Grounded', class:'Penalty', appliesTo:['Unit'], text:'If this Unit moved this turn, Cleave and Pierce deal half damage (rounded up).'},
+  {name:'Overextend', class:'Penalty', appliesTo:['Unit'], text:'If this Unit moves its full MOV this turn, it takes +1 damage from the next attack.'},
+  {name:'Momentum Drain (Ash)', class:'Penalty', appliesTo:['Unit'], text:'When this Unit moves, it loses 1 HP.'},
+  {name:'Frenzied', class:'Hybrid', appliesTo:['Unit'], text:'When this Unit moves 2+ spaces, it gains +1 ATK until end of turn, then takes 1 damage.'},
+  {name:'Momentum Strike', class:'Hybrid', appliesTo:['Unit'], text:'If this Unit moved before attacking, it deals +1 damage.'},
+  {name:'Charge X', class:'Hybrid', appliesTo:['Unit'], text:'When this Unit moves X or more spaces, its next attack deals +2 damage.'},
+  {name:'Reckless Advance', class:'Hybrid', appliesTo:['Unit'], text:'If this Unit moved this turn, its attack cannot be countered, but it takes 1 damage after attacking.'},
+  {name:'Feint', class:'Hybrid', appliesTo:['Unit'], text:'If this Unit moved and did not attack, it gains Evasion (1) until start of your next turn.'},
+  {name:'Swift', class:'Support', appliesTo:['Unit'], text:'If this Unit moves, other friendly Units adjacent to it may move 1 space without spending their movement resource.'},
+  {name:'Formation', class:'Support', appliesTo:['Unit'], text:'If this Unit ends its move adjacent to an ally, both Units gain +1 DEF until start of your next turn.'},
+  {name:"Commander's Step", class:'Support', appliesTo:['Unit'], text:'When this Unit moves, you may move one allied Unit within 2 spaces 1 space for free.'},
+  {name:'Trailblazer', class:'Support', appliesTo:['Unit'], text:'Spaces this Unit moves through this turn ignore terrain penalties for allies that move through them next.'},
+  {name:'Phasing', class:'Support', appliesTo:['Unit'], text:'This Unit may move through other Units and terrain but cannot end its move on them.'},
+  {name:'Tactician', class:'Support', appliesTo:['Unit'], text:'When this Unit finishes moving, you may reposition 1 adjacent ally to any empty space touching this Unit.'},
+  {name:'Brace', class:'Defensive', appliesTo:['Unit'], text:'If this Unit did not move, it gains +1 DEF until start of your next turn.'},
+  {name:'Fortify', class:'Defensive', appliesTo:['Unit'], text:'When this Unit ends its move in the same column as your War Chief, it gains +1 HP until end of turn.'},
+  {name:'Steadfast', class:'Defensive', appliesTo:['Unit'], text:'If this Unit moves 1 space or less, it takes –1 damage from the next attack.'},
+  {name:'Graceful', class:'Mobility', appliesTo:['Unit'], text:'This Unit ignores all movement penalties.'},
+  {name:'Retreat', class:'Mobility', appliesTo:['Unit'], text:'This Unit may move 1 space backward after attacking regardless if any movement remains.'},
+  {name:'Sprint (2)', class:'Mobility', appliesTo:['Unit'], text:'This Unit may move 2 extra spaces, but cannot attack this turn.'},
+  {name:'Blink', class:'Mobility', appliesTo:['Unit'], text:'Once per turn, this Unit may teleport 1 space to any empty adjacent position.'},
+  {name:'Scout', class:'Mobility', appliesTo:['Unit'], text:"When this Unit moves, reveal the top card of your deck; you may draw it if it’s a Unit."},
+  {name:'Teleport', class:'Mobility', appliesTo:['Unit'], text:'Unit may use a Burn Marker or Ruins tile to teleport to another marker or ruin. The Ruin or Burn marker are then destroyed.'},
+  {name:'Rush', class:'Mobility', appliesTo:['Unit'], text:'Unit enters the battlefield Rested and may act immediately.'},
+
+  // Relic traits / states / banner auras
+  {name:'Steadfast Relic', class:'Trait', appliesTo:['Relic'], text:'This Relic cannot be stolen; it must be destroyed to remove its effect.'},
+  {name:'Cursed Relic', class:'Trait', appliesTo:['Relic'], text:"When this Relic changes control, deal 1 damage to the new controller’s War Chief."},
+  {name:'Attuned (Faction)', class:'Trait', appliesTo:['Relic'], text:'This Relic only activates when controlled by a [Faction] Unit.'},
+  {name:'Dormant', class:'State', appliesTo:['Relic'], text:'If you control more than 2 Relics, excess Relics become Dormant (no effect until you lose control of another).'},
+  {name:'Relicbind', class:'Trait', appliesTo:['Unit'], text:'This Unit can hold 2 Relics at once, but cannot attack while doing so.'},
+
+  // Banners keywords / aura styles
+  {name:'Fortified', class:'Trait', appliesTo:['Banner'], text:'This Banner cannot be attacked by ranged attacks unless an enemy Unit is adjacent to it.'},
+  {name:'Radiant X', class:'Aura', appliesTo:['Banner'], text:"This Banner’s aura extends X spaces."},
+  {name:'Rally 1', class:'Aura', appliesTo:['Banner'], text:'At the start of your turn, heal 1 HP to all allies within the aura.'},
+  {name:'Dread 1', class:'Aura', appliesTo:['Banner'], text:'Enemies entering the aura take 1 damage.'},
+  {name:'Beacon', class:'Aura', appliesTo:['Banner'], text:'Units within this aura gain +1 MOV when moving toward a controlled Relic.'},
+  {name:'Siphon', class:'Aura', appliesTo:['Banner'], text:'Relics within 2 spaces grant their effects to this Banner’s controller instead of their own controller.'},
+  {name:'Anathema', class:'Aura', appliesTo:['Banner'], text:'Relics inside this aura become Dormant.'},
+  {name:'Ward', class:'Aura', appliesTo:['Banner'], text:'Allied Relics within the aura cannot be stolen.'},
+  {name:'Collapse', class:'Aura', appliesTo:['Banner'], text:'When this Banner is destroyed, deal 2 damage to all Units within 2 spaces.'},
+  {name:'Inspire X', class:'Aura', appliesTo:['Banner'], text:'Allied Units entering the aura this turn gain +X ATK until end of turn.'},
+];
+
+// --------------------- State ---------------------
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+let queue = [];
+let autoCounter = 1;
+let picked = [];
+
+function renderPicked(){
+  const box = $('#picked');
+  if(!picked.length){ box.innerHTML = '<span class="muted">None selected yet.</span>'; return; }
+  box.innerHTML = picked.map(m => `<span class="mechanic-pill"><b>${m.name}</b> · ${m.class}</span>`).join('');
+}
+
+function renderMechanics(){
+  const list = $('#mechList');
+  const ft = $('#filterType').value;
+  const fc = $('#filterClass').value;
+  const q = $('#search').value.toLowerCase();
+  const type = $('#type').value;
+
+  const items = MECHANICS.filter(m =>
+    (ft==='all' || m.appliesTo.includes(ft)) &&
+    (fc==='any' || m.class===fc) &&
+    (m.appliesTo.includes(type)) &&
+    (
+      !q || m.name.toLowerCase().includes(q) || m.text.toLowerCase().includes(q)
+    )
+  );
+
+  list.innerHTML = '';
+  if(!items.length){
+    list.innerHTML = '<div class="muted">No mechanics match that filter.</div>';
+    return;
+  }
+
+  items.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'card pad';
+    card.style.background = '#17171a';
+    card.innerHTML = `
+      <div class="header">
+        <div>
+          <div style="font-weight:700">${m.name}</div>
+          <div class="mini">${m.class} · ${m.appliesTo.join(', ')}</div>
+        </div>
+        <button class="sec" data-pick>Add</button>
+      </div>
+      <div style="margin-top:8px" class="hint">${m.text}</div>
+    `;
+    card.querySelector('[data-pick]').addEventListener('click', () => {
+      if(!picked.find(x => x.name===m.name)){
+        picked.push(m);
+        // append to rules text and keywords
+        const rt = $('#rulesText');
+        rt.value = (rt.value? rt.value + '\n' : '') + `• ${m.text}`;
+        const kw = $('#keywords');
+        const kws = kw.value ? kw.value.split(/[;,]/).map(s=>s.trim()).filter(Boolean) : [];
+        if(!kws.find(k => k.toLowerCase()===m.name.toLowerCase())){
+          kws.push(m.name);
+          kw.value = kws.join('; ');
+        }
+        renderPicked();
+      }
+    });
+    list.appendChild(card);
+  });
+}
+
+function clearMechanics(){ picked = []; renderPicked(); }
+
+function nextAutoId(){
+  const pad = n => String(n).padStart(3,'0');
+  return `TMP-${pad(autoCounter++)}`;
+}
+
+function getForm(){
+  const id = $('#cardId').value.trim() || nextAutoId();
+  const name = $('#name').value.trim();
+  const type = $('#type').value;
+  const cost = Number($('#cost').value||0);
+  const atk = Number($('#atk').value||0);
+  const hp = Number($('#hp').value||0);
+  const mov = Number($('#mov').value||0);
+  const faction = $('#faction').value.trim();
+  const rarity = $('#rarity').value.trim();
+  const keywords = $('#keywords').value.trim();
+  const rules = $('#rulesText').value.trim();
+  const flavor = $('#flavor').value.trim();
+  return { id,name,type,cost,atk,hp,mov,faction,rarity,keywords,rules,flavor };
+}
+
+function validate(form){
+  const errors = [];
+  if(!form.name) errors.push('Name required');
+  if(!form.type) errors.push('Type required');
+  return errors;
+}
+
+function resetForm(){
+  $('#cardId').value = '';
+  $('#name').value = '';
+  $('#type').value = 'Unit';
+  $('#cost').value = 0;
+  $('#atk').value = 0;
+  $('#hp').value = 1;
+  $('#mov').value = 1;
+  $('#faction').value = '';
+  $('#rarity').value = '';
+  $('#keywords').value = '';
+  $('#rulesText').value = '';
+  $('#flavor').value = '';
+  clearMechanics();
+  renderMechanics();
+}
+
+function renderQueue(){
+  const body = $('#queueBody');
+  body.innerHTML='';
+  if(queue.length===0){ $('#queueHint').textContent = 'No items yet.'; return; }
+  $('#queueHint').textContent = `${queue.length} item(s) queued.`;
+  queue.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${row.Name}</td>
+      <td>${row.Type}</td>
+      <td>${row.Cost}</td>
+      <td>${row.ATK}</td>
+      <td>${row.HP}</td>
+      <td>${row.MOV}</td>
+      <td style="text-align:right">
+        <button class="sec" data-edit>Edit</button>
+        <button class="bad" data-del>Delete</button>
+      </td>
+    `;
+    tr.querySelector('[data-del]').addEventListener('click', () => {
+      queue.splice(i,1); renderQueue();
+    });
+    tr.querySelector('[data-edit]').addEventListener('click', () => {
+      // load back to form
+      $('#cardId').value = row['Card ID'];
+      $('#name').value = row['Name'];
+      $('#type').value = row['Type'];
+      $('#cost').value = row['Cost'];
+      $('#atk').value = row['ATK'];
+      $('#hp').value = row['HP'];
+      $('#mov').value = row['MOV'];
+      $('#faction').value = row['Faction'];
+      $('#rarity').value = row['Rarity'];
+      $('#keywords').value = row['Keywords'];
+      $('#rulesText').value = row['Rules Text'];
+      $('#flavor').value = row['Flavor Text'];
+      // reconstruct picked (best-effort: from keywords)
+      picked = [];
+      const kw = (row['Keywords']||'').split(/[;,]/).map(s=>s.trim()).filter(Boolean);
+      kw.forEach(k => {
+        const m = MECHANICS.find(x => x.name.toLowerCase()===k.toLowerCase());
+        if(m) picked.push(m);
+      });
+      renderPicked();
+      renderMechanics();
+    });
+    body.appendChild(tr);
+  });
+}
+
+function toCsv(rows){
+  if(!rows.length) return '';
+  const headers = Object.keys(rows[0]);
+  const escape = v => {
+    if(v==null) return '';
+    const s = String(v);
+    if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+    return s;
+  };
+  const lines = [headers.join(',')];
+  rows.forEach(r => lines.push(headers.map(h => escape(r[h])).join(',')));
+  return lines.join('\n');
+}
+
+function download(filename, content){
+  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// --------------------- Events ---------------------
+$('#type').addEventListener('change', () => { renderMechanics(); });
+$('#filterType').addEventListener('change', renderMechanics);
+$('#filterClass').addEventListener('change', renderMechanics);
+$('#search').addEventListener('input', renderMechanics);
+$('#clearMech').addEventListener('click', () => { clearMechanics(); $('#rulesText').value=''; $('#keywords').value=''; });
+
+$('#addBtn').addEventListener('click', () => {
+  const f = getForm();
+  const errs = validate(f);
+  if(errs.length){ alert('Please fix: '+errs.join(', ')); return; }
+  const row = {
+    'Card ID': f.id,
+    'Name': f.name,
+    'Faction': f.faction,
+    'Type': f.type,
+    'Cost': f.cost,
+    'ATK': f.atk,
+    'HP': f.hp,
+    'MOV': f.mov,
+    'Rarity': f.rarity,
+    'Keywords': f.keywords,
+    'Rules Text': f.rules,
+    'Flavor Text': f.flavor,
+  };
+  queue.push(row);
+  renderQueue();
+  // prepare next auto id
+  $('#cardId').value = '';
+});
+
+$('#resetBtn').addEventListener('click', resetForm);
+
+$('#exportCsv').addEventListener('click', () => {
+  if(queue.length===0){ alert('Queue is empty.'); return; }
+  const csv = toCsv(queue);
+  download('soa_card_creator_export.csv', csv);
+});
+
+$('#clearQueue').addEventListener('click', () => {
+  if(queue.length && !confirm('Clear the entire queue?')) return;
+  queue = []; renderQueue();
+});
+
+// init
+renderMechanics();
+renderPicked();
+</script>
+</body>
+</html>
