@@ -82,6 +82,23 @@
             </div>
           </div>
 
+          <div class="grid2">
+            <div>
+              <label>Subtype <span class="muted">(e.g., Human, Kitsune, Lunari, Thrall, Dragonkin, Pawn…)</span></label>
+              <input id="subtype" list="subtypeOptions" placeholder="Start typing or pick…" />
+              <datalist id="subtypeOptions"></datalist>
+            </div>
+            <div>
+              <label>Faction <span class="muted">(optional)</span></label>
+              <select id="faction">
+                <option value="">—</option>
+                <option>Flame</option>
+                <option>Blood</option>
+                <option>Ash</option>
+              </select>
+            </div>
+          </div>
+
           <div>
             <label>Name</label>
             <input id="name" placeholder="E.g., Ember Vanguard" />
@@ -108,18 +125,6 @@
               <input id="mov" type="number" min="0" value="1" />
             </div>
             <div>
-              <label>Faction <span class="muted">(optional)</span></label>
-              <select id="faction">
-                <option value="">—</option>
-                <option>Flame</option>
-                <option>Blood</option>
-                <option>Ash</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div>
               <label>Rarity <span class="muted">(optional)</span></label>
               <select id="rarity">
                 <option value="">—</option>
@@ -129,10 +134,6 @@
                 <option>Elite</option>
                 <option>Gamechanger</option>
               </select>
-            </div>
-            <div>
-              <label>Flavor Text <span class="muted">(optional)</span></label>
-              <input id="flavor" placeholder="\"Power always costs something.\"" />
             </div>
           </div>
 
@@ -148,12 +149,17 @@
             <input id="keywords" placeholder="Comma or semicolon separated" />
           </div>
 
+          <div>
+            <label>Flavor Text <span class="muted">(optional)</span></label>
+            <input id="flavor" placeholder="\"Power always costs something.\"" />
+          </div>
+
           <div class="btns">
             <button id="addBtn">Add to Queue</button>
             <button class="sec" id="resetBtn">Clear</button>
           </div>
 
-          <div class="hint">CSV columns exported match your v7.1 sheet: <b>Card ID, Name, Faction, Type, Cost, ATK, HP, MOV, Rarity, Keywords, Rules Text, Flavor Text</b>.</div>
+          <div class="hint">CSV columns exported match your v7.1 sheet + Subtype: <b>Card ID, Name, Faction, Type, Subtype, Cost, ATK, HP, MOV, Rarity, Keywords, Rules Text, Flavor Text</b>.</div>
         </div>
       </div>
 
@@ -202,7 +208,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>#</th><th>Name</th><th>Type</th><th>Cost</th><th>ATK</th><th>HP</th><th>MOV</th><th class="right">Actions</th>
+                  <th>#</th><th>Name</th><th>Type</th><th>Subtype</th><th>Cost</th><th>ATK</th><th>HP</th><th>MOV</th><th class="right">Actions</th>
                 </tr>
               </thead>
               <tbody id="queueBody"></tbody>
@@ -215,6 +221,28 @@
   </div>
 
 <script>
+// --------------------- Subtype Options ---------------------
+const SUBTYPE_OPTIONS = [
+  // Humanoid
+  'Human','Ashen','Kitsune','Lunari','Thrall','Acolyte','Warden',
+  // Beast / Monster
+  'Dragonkin','Wyrm','Chimera','Kirin','Leviathan',
+  // Undead / Construct
+  'Revenant','Wraith','Automaton','Hollow','Echo',
+  // Rank / Role
+  'Pawn','Vanguard','Sentinel','Invoker','Warchief',
+  // Spirit / Entity
+  'Fragmentborn','Celestial','Shade','Dreamer'
+];
+
+// Populate datalist
+(function(){
+  const dl = document.getElementById('subtypeOptions');
+  SUBTYPE_OPTIONS.forEach(s=>{
+    const opt = document.createElement('option'); opt.value = s; dl.appendChild(opt);
+  });
+})();
+
 // --------------------- Mechanics Catalog ---------------------
 // Each mechanic: { name, class: 'Penalty'|'Hybrid'|'Support'|'Defensive'|'Mobility'|'Trait'|'State'|'Aura', appliesTo:['Unit'|'Relic'|'Banner'], text }
 const MECHANICS = [
@@ -347,6 +375,7 @@ function getForm(){
   const id = $('#cardId').value.trim() || nextAutoId();
   const name = $('#name').value.trim();
   const type = $('#type').value;
+  const subtype = $('#subtype').value.trim();
   const cost = Number($('#cost').value||0);
   const atk = Number($('#atk').value||0);
   const hp = Number($('#hp').value||0);
@@ -356,7 +385,7 @@ function getForm(){
   const keywords = $('#keywords').value.trim();
   const rules = $('#rulesText').value.trim();
   const flavor = $('#flavor').value.trim();
-  return { id,name,type,cost,atk,hp,mov,faction,rarity,keywords,rules,flavor };
+  return { id,name,type,subtype,cost,atk,hp,mov,faction,rarity,keywords,rules,flavor };
 }
 
 function validate(form){
@@ -370,6 +399,7 @@ function resetForm(){
   $('#cardId').value = '';
   $('#name').value = '';
   $('#type').value = 'Unit';
+  $('#subtype').value = '';
   $('#cost').value = 0;
   $('#atk').value = 0;
   $('#hp').value = 1;
@@ -394,6 +424,7 @@ function renderQueue(){
       <td>${i+1}</td>
       <td>${row.Name}</td>
       <td>${row.Type}</td>
+      <td>${row.Subtype||''}</td>
       <td>${row.Cost}</td>
       <td>${row.ATK}</td>
       <td>${row.HP}</td>
@@ -411,6 +442,7 @@ function renderQueue(){
       $('#cardId').value = row['Card ID'];
       $('#name').value = row['Name'];
       $('#type').value = row['Type'];
+      $('#subtype').value = row['Subtype']||'';
       $('#cost').value = row['Cost'];
       $('#atk').value = row['ATK'];
       $('#hp').value = row['HP'];
@@ -436,7 +468,9 @@ function renderQueue(){
 
 function toCsv(rows){
   if(!rows.length) return '';
-  const headers = Object.keys(rows[0]);
+  const headers = [
+    'Card ID','Name','Faction','Type','Subtype','Cost','ATK','HP','MOV','Rarity','Keywords','Rules Text','Flavor Text'
+  ];
   const escape = v => {
     if(v==null) return '';
     const s = String(v);
@@ -457,7 +491,11 @@ function download(filename, content){
 }
 
 // --------------------- Events ---------------------
-$('#type').addEventListener('change', () => { renderMechanics(); });
+$('#type').addEventListener('change', () => {
+  // If Warchief selected, you might want default HP=40; uncomment if desired
+  // if($('#type').value==='Warchief') $('#hp').value = 40;
+  renderMechanics();
+});
 $('#filterType').addEventListener('change', renderMechanics);
 $('#filterClass').addEventListener('change', renderMechanics);
 $('#search').addEventListener('input', renderMechanics);
@@ -472,6 +510,7 @@ $('#addBtn').addEventListener('click', () => {
     'Name': f.name,
     'Faction': f.faction,
     'Type': f.type,
+    'Subtype': f.subtype,
     'Cost': f.cost,
     'ATK': f.atk,
     'HP': f.hp,
